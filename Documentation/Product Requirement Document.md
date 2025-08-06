@@ -1,6 +1,3 @@
------
-
-# Product Requirements Document: AI Me Apply
 
 **Version:** 4.0
 \<br\> **Date:** August 6, 2025
