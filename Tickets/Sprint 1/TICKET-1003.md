@@ -20,4 +20,13 @@ The function must catch and re-throw specific errors, such as a "user with this 
 
 ## Acceptance Criteria
 1. The function successfully creates a new user in Supabase Auth.
-2. The function correctly handles a duplicate email by throwing a catchable error. 
+2. The function correctly handles a duplicate email by throwing a catchable error.
+
+---
+
+## Implementation Notes (Completed)
+- Implemented `src/auth/createUserInSupabase.js` with input validation and duplicate email normalization
+- Added unit tests in `src/__tests__/createUserInSupabase.test.js` (success + duplicate email)
+
+## How to Run
+- Tests: `npm test` (workspace: user-authentication-service) 

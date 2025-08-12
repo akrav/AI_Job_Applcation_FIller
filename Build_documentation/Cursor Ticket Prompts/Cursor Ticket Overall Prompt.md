@@ -1,0 +1,1 @@
+Please read and execute what is written in /Users/adam/Documents/GitHub/AI_Job_Applcation_FIller/Build_documentation/Cursor Ticket Prompts/Sprint {Sprint-ID}/TICKET-{Ticket-ID} Prompt.md

@@ -38,4 +38,16 @@ Enable RLS on all three tables and create a policy that only allows a user to `S
 
 ## Acceptance Criteria
 1. All three tables exist with the correct schemas.
-2. The RLS policies are enabled and correctly prevent unauthorized access. 
+2. The RLS policies are enabled and correctly prevent unauthorized access.
+
+---
+
+## Implementation Notes (Completed)
+- Added `database/migrations/001_core_schema.sql` with tables + RLS own-row policies
+- Used `database/scripts/refresh_database.sh` to recreate schema and apply migrations
+- Verified via `database/scripts/verify_schema.sql` — all tables present, RLS enabled
+
+## How to Run
+- Ensure `.env` has `DATABASE_URL`
+- Run: `./database/scripts/refresh_database.sh`
+- Verification runs automatically and prints results 
