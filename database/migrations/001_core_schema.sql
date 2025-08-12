@@ -45,4 +45,10 @@ BEGIN
   END IF;
 END $$;
 
+-- Privileges: allow service_role to manage tables (bypasses RLS)
+GRANT USAGE ON SCHEMA public TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.users TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.writing_style_profiles TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.memory_banks TO service_role;
+
 COMMIT; 

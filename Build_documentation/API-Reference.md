@@ -1,6 +1,6 @@
 # API Reference
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Last Updated:** August 7, 2025  
 **Scope:** Sprint 1 - Foundational Infrastructure & Core User Service
 
@@ -33,13 +33,16 @@
 ```json
 {
   "email": "string",
-  "password": "string"
+  "password": "string",
+  "name": "string (optional)"
 }
 ```
 - **Responses:**
-  - 201 Created `{ message: "registered" }`
+  - 201 Created `{ "message": "registered" }`
   - 400 Bad Request
   - 409 Conflict (duplicate email)
+- **Notes:**
+  - Uses upsert for `public.users` and `public.memory_banks` to avoid races with auth triggers.
 
 ### POST /api/v1/auth/login
 - **Description:** Authenticates user and returns JWT.
@@ -51,30 +54,33 @@
 }
 ```
 - **Responses:**
-  - 200 OK `{ token: "..." }`
+  - 200 OK `{ "token": "...", "expiresAt": "ISO-8601" }`
+  - 400 Bad Request
   - 401 Unauthorized
 
 ### GET /api/v1/users/me
+- **Auth:** `Authorization: Bearer <access_token>`
 - **Description:** Returns authenticated user's profile data.
-- **Headers:** `Authorization: Bearer <token>`
 - **Responses:**
-  - 200 OK `{ name: string, ... }`
+  - 200 OK `{ id, email, name, created_at }`
   - 401 Unauthorized
+  - 404 Not Found (no row for user)
 
 ### POST /api/v1/profile/onboard
+- **Auth:** `Authorization: Bearer <access_token>`
 - **Description:** Saves initial MemoryBanks data for authenticated user.
-- **Headers:** `Authorization: Bearer <token>`
 - **Body:** `{ ...JSON payload... }`
 - **Responses:**
-  - 200 OK `{ message: "saved" }`
+  - 200 OK `{ "message": "saved" }`
   - 401 Unauthorized
+  - 404 Not Found
 
 ---
 
 ## Conventions
 - **Versioning:** All endpoints prefixed with `/api/v1/`
-- **Auth:** JWT in `Authorization` header
-- **Errors:** JSON with `error` and `message` fields
+- **Auth:** JWT in `Authorization` header. Use `access_token` from login.
+- **Errors:** JSON with `error` and optional `message` fields
 
 ---
 

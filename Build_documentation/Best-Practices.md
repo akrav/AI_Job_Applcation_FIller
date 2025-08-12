@@ -1,6 +1,6 @@
 # Engineering Best Practices
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Last Updated:** August 7, 2025  
 **Scope:** Applies to all tickets
 
@@ -27,11 +27,13 @@
 - Environment variables via `.env` (never commit secrets)
 - Enforce JWT on protected routes; verify audience/issuer when available
 - Enable Supabase RLS; least-privilege data access
+- For server-side writes, use service role client and target `schema('public')`
 
 ## Testing
 - Unit tests for pure logic (happy + edge cases)
 - Integration tests for endpoints and Supabase interactions
-- Cross-ticket tests to keep system consistent
+- Optional live tests gated by `RUN_SUPABASE_IT=1`
+- Load `.env` before importing app in ESM tests
 - Target 80%+ coverage for new code
 - Keep tests deterministic (unique emails, seeded data)
 
@@ -49,6 +51,10 @@
 - Timeouts for all external calls (LLM, scraping, Supabase)
 - Exponential backoff for transient errors; no retries for user errors
 - Pagination for list endpoints; input size limits on uploads
+
+## Data Sync & Triggers
+- Use DB triggers to sync `auth.users` to `public` tables and cascade deletes
+- When triggers pre-seed rows, prefer UPSERT in API layer to merge additional fields (e.g., `name`)
 
 ## Definition of Done (per Ticket)
 - Code implemented with best practices above

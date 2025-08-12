@@ -4,6 +4,9 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import cors from 'cors';
 import { initSupabaseFromEnv } from './supabaseClient.js';
+import authRouter from './routes/auth.js';
+import usersRouter from './routes/users.js';
+import profileRouter from './routes/profile.js';
 
 const app = express();
 app.use(helmet());
@@ -32,6 +35,10 @@ app.get('/health', (req, res) => {
 app.get('/api/v1/status', (req, res) => {
   res.status(200).json({ service: 'user-authentication-service', version: '0.1.0' });
 });
+
+app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/users', usersRouter);
+app.use('/api/v1/profile', profileRouter);
 
 app.use((err, req, res, next) => {
   // eslint-disable-next-line no-console
