@@ -162,3 +162,43 @@ DATABASE_URL="postgresql://postgres:***@db.<ref>.supabase.co:5432/postgres?sslmo
 const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 await admin.schema('public').from('users').insert({ id, email });
 ``` 
+
+### 12) 500 on signup: `unexpected_failure` / `Database error saving new user`
+- Symptom:
+  - Signup via `supabase.auth.signUp` returns 500 with `code: unexpected_failure`, `message: Database error saving new user`.
+  - Env is correct; anon and service keys present.
+- Root cause:
+  - A user-defined trigger on `auth.users` (e.g., `on_auth_user_created`) called a function (`public.handle_new_auth_user`) that raised an exception (missing table/function, permissions, or logic error). Any exception in this trigger aborts the insert into `auth.users`, causing GoTrue to return 500.
+- Fix we applied:
+  - Added migration `database/migrations/005_auth_user_trigger.sql` to recreate `public.handle_new_auth_user()` as a robust, non-blocking function and rebind the trigger.
+  - Key properties:
+    - `SECURITY DEFINER`, `SET search_path=public`.
+    - Guard side-effects with `IF to_regclass('schema.table') IS NOT NULL`.
+    - Use `ON CONFLICT DO NOTHING`.
+    - Wrap each block with `BEGIN … EXCEPTION WHEN OTHERS THEN NULL; END;` to ensure the trigger never blocks the auth insert.
+  - Recreated trigger:
+    - `DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;`
+    - `CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_auth_user();`
+- How to verify:
+  1) Re-run DB refresh: `./database/scripts/refresh_database.sh`.
+  2) Check trigger binding:
+     ```sql
+     SELECT tgname, pg_get_triggerdef(t.oid) AS def
+     FROM pg_trigger t
+     WHERE t.tgrelid = 'auth.users'::regclass AND NOT t.tgisinternal;
+     ```
+  3) Run tests: `RUN_SUPABASE_IT=1 npm --workspace services/user-authentication-service run test`.
+  4) Expect `POST /api/v1/auth/register` → 201.
+- Optional instrumentation (we added, safe for CI):
+  - Test logs a non-sensitive env summary (`ENV_PATH`, booleans for keys set, derived project ref) to prove the correct `.env` is loaded.
+  - Temporary route `GET /api/v1/health/env` returns booleans for `SUPABASE_URL`, `ANON`, `SERVICE` presence and derived project ref.
+  - Route logs one-line `[SIGNUP_ERROR]` context (status/code/message + env booleans) on failures.
+- Prevention:
+  - Keep `auth.users` trigger functions idempotent and non-throwing.
+  - If you need side-effects (seeding rows in `public`), always:
+    - Check table existence with `to_regclass`.
+    - Use `ON CONFLICT DO NOTHING`.
+    - Wrap in `EXCEPTION WHEN OTHERS THEN NULL`.
+  - Avoid hard dependencies on objects dropped by local refresh scripts.
+  - Validate env before runtime. In tests, load `.env` before importing the app.
+  - Ensure Supabase Auth “Allow new users to sign up” and Email provider are enabled; use passwords that meet policy. 

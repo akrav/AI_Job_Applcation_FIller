@@ -75,6 +75,17 @@
   - 401 Unauthorized
   - 404 Not Found
 
+### POST /api/v1/files/upload
+- **Auth:** `Authorization: Bearer <access_token>`
+- **Description:** Uploads a corpus file (PDF, DOCX, TXT, MD) to Supabase Storage.
+- **Form-Data:**
+  - `file` (single file)
+- **Constraints:** Max 15MB; allowed types: application/pdf, docx, text/plain, text/markdown
+- **Responses:**
+  - 201 Created `{ "bytes_url": "https://...", "mime_type": "text/plain", "size": 1234, "path": "bucket/path" }`
+  - 400 Bad Request
+  - 401 Unauthorized
+
 ---
 
 ## Conventions

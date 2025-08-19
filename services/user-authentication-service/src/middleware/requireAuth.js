@@ -1,23 +1,17 @@
-import { createClient } from '@supabase/supabase-js';
+import { initSupabaseFromEnv } from '../supabaseClient.js';
 
-export function requireAuth() {
-  return async (req, res, next) => {
-    try {
-      const auth = req.headers.authorization || '';
-      const [, token] = auth.split(' ');
-      if (!token) return res.status(401).json({ error: 'unauthorized' });
-
-      const supabaseUrl = process.env.SUPABASE_URL;
-      const anonKey = process.env.SUPABASE_ANON_KEY;
-      if (!supabaseUrl || !anonKey) return res.status(500).json({ error: 'server_misconfigured' });
-
-      const anon = createClient(supabaseUrl, anonKey);
-      const { data, error } = await anon.auth.getUser(token);
-      if (error || !data?.user?.id) return res.status(401).json({ error: 'unauthorized' });
-      req.userId = data.user.id;
-      return next();
-    } catch (e) {
-      return res.status(401).json({ error: 'unauthorized' });
-    }
-  };
+export async function requireAuth(req, res, next) {
+	try {
+		const auth = req.header('authorization') || req.header('Authorization') || '';
+		const match = auth.match(/^Bearer\s+(.+)$/i);
+		if (!match) return res.status(401).json({ error: 'UNAUTHORIZED', message: 'Missing Bearer token' });
+		const token = match[1];
+		const supabase = initSupabaseFromEnv();
+		const { data, error } = await supabase.auth.getUser(token);
+		if (error || !data?.user?.id) return res.status(401).json({ error: 'UNAUTHORIZED', message: 'Invalid or expired token' });
+		req.userId = data.user.id;
+		return next();
+	} catch (err) {
+		return res.status(401).json({ error: 'UNAUTHORIZED', message: 'Token validation failed' });
+	}
 } 

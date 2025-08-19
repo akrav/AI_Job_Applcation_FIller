@@ -1,159 +1,200 @@
-### **Sprint 3 Overview: Core AI Functionality & Content Generation**
+### **Sprint 3: UI/UX & Deployment**
 
-This sprint's purpose is to build the backend services that enable our AI to generate personalized content. We'll start with the low-level, self-contained web scraping function and then use it as a dependency for our content generation engine. This engine will orchestrate data retrieval from the user's profile, company intelligence from the web, and an external LLM to produce a final, tailored output.
-
------
-
-### **Major Functionality Delivered**
-
-  * **Web Scraping Logic**: A robust function to scrape company websites for key information to be used as context for the AI.
-  * **Prompt Orchestration Service**: The core function that constructs a detailed, contextual prompt for the LLM using data from the user's `MemoryBank`, `WritingStyleProfile`, and the scraped company data.
-  * **Content Generation API**: A protected endpoint where a user can provide a company URL and a job description to trigger the AI to generate a custom cover letter.
-  * **Content Storage**: The generated content will be stored in the database, allowing users to review and download it later.
-  * **Enhanced RBAC**: We will protect the content generation API, ensuring only authenticated users can access this premium feature.
+This sprint is heavily revised to reflect the new, interactive UI components required for the enhanced backend functionality.
 
 -----
 
-### **Sprint Tickets**
-
-The tickets are ordered to resolve dependencies, beginning with the low-level functions and culminating in the final API endpoints.
-
------
-
-**Ticket Name:** Implement Web Scraping Function 🕸️
-\<br\> **Ticket Number:** TICKET-3001
-\<br\> **Description:** Create a low-level, reusable function to scrape a given company URL for key information. This function will be a critical building block for the AI's content generation.
+**Ticket Name:** Initialize React Frontend Application 🎨
+\<br\> **Ticket Number:** TICKET-301
+\<br\> **Description:** This ticket is for setting up the initial structure of the React web application, installing core dependencies for UI components and API communication.
 \<br\> **Requirements/Other docs:**
 
-  * **Function Signature**: `scrapeCompanyInfo(url)`
-  * **Logic**:
-    1.  The function should take a URL as input and use a library like `axios` and a web scraping tool like `cheerio` or `puppeteer` to fetch the page content.
-    2.  It should specifically target and extract text from key sections like "About Us," "Our Mission," "Careers," and general body text.
-    3.  It should return a single string of concatenated text.
-    4.  Implement a strict timeout (e.g., 30 seconds) and handle common errors (e.g., page not found, connection timed out).
-        \<br\> **Test Suite Design:**
-  * A **unit test** for the function with a **valid company URL** that asserts a non-empty string of text is returned.
-  * A **unit test** for an **invalid URL** or a page that returns a 404, asserting a specific error is thrown.
-  * A **unit test** for a **timeout** scenario, asserting the function fails gracefully after a defined period.
+  * **Framework**: Use `create-react-app` or a similar boilerplate.
+  * **Dependencies**: Install `react-router-dom`, `axios`, and a UI component library.
     \<br\> **Acceptance Criteria:**
-  * The function successfully extracts text from a given URL.
-  * The function gracefully handles errors and timeouts.
+  * A new React project is created and can be run locally.
 
 -----
 
-**Ticket Name:** Update Core Database Schema for Generated Content 📝
-\<br\> **Ticket Number:** TICKET-3002
-\<br\> **Description:** This ticket involves updating the existing database with a new table to store generated application content.
+**Ticket Name:** Implement Frontend Authentication Service & Token Management 🔑
+\<br\> **Ticket Number:** TICKET-302
+\<br\> **Description:** Create a dedicated, testable service module to handle all communication with the backend authentication API. This module will also be responsible for managing the JWT in local storage.
 \<br\> **Requirements/Other docs:**
 
-  * **Table**: The migration script must create the `generated_applications` table.
-  * **Field Definitions**:
-    ### **`generated_applications`**
-    | Field Name | Specification |
-    | :--- | :--- |
-    | `id` | UUID, Primary Key |
-    | `user_id` | UUID, Foreign Key to `users.id` |
-    | `company_url` | VARCHAR, Not Null |
-    | `job_description` | TEXT, Not Null |
-    | `generated_text` | TEXT, Not Null |
-    | `created_at` | TIMESTAMPZ, Not Null |
-  * **Row-Level Security (RLS)**: Add an RLS policy that allows a user to only `SELECT` and `DELETE` rows where `user_id` matches their own ID.
-  * **Mermaid ERD:** Update the existing ERD to include the new `generated_applications` table.
-    ```mermaid
-    erDiagram
-        users {
-            UUID id PK
-            ...
-        }
-        generated_applications {
-            UUID id PK
-            UUID user_id FK
-            VARCHAR company_url
-            TEXT job_description
-            TEXT generated_text
-            TIMESTAMPZ created_at
-        }
-        users ||--o{ generated_applications : "generated many"
-    ```
-
-\<br\> **Test Suite Design:**
-
-  * A **migration test** that confirms the `generated_applications` table is created successfully.
-  * A **schema test** that verifies all columns, data types, and foreign key constraints are correct.
-  * A **security test** that confirms the RLS policy is correctly applied.
+  * **File**: `/src/services/authService.js`.
+  * **Functions**: `login(email, password)`, `logout()`, `getToken()`.
     \<br\> **Acceptance Criteria:**
-  * The `generated_applications` table is created in the database with the specified schema.
-  * The RLS policy is correctly enabled and functional.
+  * The module is created with the specified functions.
+  * The `login` function successfully calls the API and stores the token.
 
 -----
 
-**Ticket Name:** Implement AI Prompt Orchestration Function 🧠
-\<br\> **Ticket Number:** TICKET-3003
-\<br\> **Description:** Create a low-level function that builds the final, comprehensive prompt for the LLM. This is the core logic that brings all the data together.
+**Ticket Name:** Build Login Page UI 🖼️
+\<br\> **Ticket Number:** TICKET-303
+\<br\> **Description:** Build the user interface for the login page and connect it to the authentication service.
 \<br\> **Requirements/Other docs:**
 
-  * **Function Signature**: `buildAiPrompt(userData, companyInfo, jobDescription)`
-  * **Logic**:
-    1.  The function takes the user's `MemoryBank` data, `WritingStyleProfile` data, the scraped company info, and a job description as input.
-    2.  It will assemble a single, formatted string (the prompt) that instructs the LLM to generate a personalized cover letter.
-    3.  The prompt must include all contextual data (e.g., "Write in this style: ...", "Use this experience: ...", "Mention this about the company: ...").
-        \<br\> **Test Suite Design:**
-  * A **unit test** with **mock data** for all inputs that asserts the function returns a non-empty string.
-  * A **unit test** that verifies the generated prompt string contains specific keywords or phrases from the input data (e.g., the user's name, the company's mission).
+  * **UI**: A simple, clean form with email and password inputs.
+  * **Logic**: Connect the form to the `TICKET-108` endpoint.
     \<br\> **Acceptance Criteria:**
-  * The function correctly combines all data sources into a single, well-structured prompt.
-  * The prompt is formatted to be easily understood by a large language model.
+  * A user can enter credentials and log in.
 
 -----
 
-**Ticket Name:** Implement Content Generation Endpoint ✍️
-\<br\> **Ticket Number:** TICKET-3004
-\<br\> **Description:** Create the protected API endpoint that orchestrates the entire content generation process. This endpoint will be the main entry point for users to create a new cover letter.
+**Ticket Name:** Build Registration Page UI 📝
+\<br\> **Ticket Number:** TICKET-304
+\<br\> **Description:** Build the user interface for the registration page and connect it to the authentication service.
 \<br\> **Requirements/Other docs:**
 
-  * **Endpoint**: `POST /api/v1/generate/cover-letter`
-  * **Protection**: The endpoint must require a valid JWT.
-  * **Request Body**:
-    ```json
-    {
-      "company_url": "string",
-      "job_description": "string"
-    }
-    ```
-  * **Success Response**: `200 OK` with a JSON body containing the generated text.
-  * **Logic**:
-    1.  Validate the request body.
-    2.  Use the `user_id` from the JWT to fetch the user's `MemoryBank` and `WritingStyleProfile`.
-    3.  Call the `scrapeCompanyInfo` function with the provided URL.
-    4.  Call the `buildAiPrompt` function with all the collected data.
-    5.  Send the final prompt to the external LLM API.
-    6.  Save the generated text into the `generated_applications` table.
-        \<br\> **Test Suite Design:**
-  * An **integration test** for a **successful request** that asserts a `200` status and a non-empty string is returned.
-  * An **integration test** with **invalid input** (e.g., bad URL) that asserts a `400` status.
-  * An **integration test** with an **unauthenticated user** that asserts a `401` status.
+  * **UI**: A simple, clean form with email and password inputs.
+  * **Logic**: Connect the form to the `TICKET-106` endpoint.
     \<br\> **Acceptance Criteria:**
-  * The endpoint successfully generates content using all data sources and returns a response.
-  * The generated content is saved to the database.
+  * A user can enter credentials and register for an account.
 
 -----
 
-**Ticket Name:** Implement Content Retrieval Endpoint 📂
-\<br\> **Ticket Number:** TICKET-3005
-\<br\> **Description:** Create a protected endpoint that allows a logged-in user to retrieve a previously generated cover letter by its ID.
+**Ticket Name:** Build Main Dashboard Layout Component 🎨
+\<br\> **Ticket Number:** TICKET-305
+\<br\> **Description:** Create the main shell for the authenticated application view, including a header and sidebar.
 \<br\> **Requirements/Other docs:**
 
-  * **Endpoint**: `GET /api/v1/generated-content/{id}`
-  * **Protection**: The endpoint must require a valid JWT.
-  * **Success Response**: `200 OK` with the full content of the generated cover letter.
-  * **Logic**:
-    1.  Use the `user_id` from the JWT.
-    2.  Query the `generated_applications` table for the record with the matching `id` and `user_id`.
-    3.  Return the `generated_text`.
-        \<br\> **Test Suite Design:**
-  * An **integration test** for a **valid `id`** that asserts a `200` status and the correct text is returned.
-  * An **integration test** with an **invalid `id`** that asserts a `404 Not Found` status.
-  * An **integration test** where User A attempts to access content belonging to User B, asserting a `403` or `404` status (to test RLS).
+  * **Component**: A `DashboardLayout` component.
+  * **UI**: A layout component that includes a header with a "Logout" button and a main content area.
+  * **Logic**: The "Logout" button should call the `logout()` function from the authentication service.
     \<br\> **Acceptance Criteria:**
-  * A user can retrieve their own generated content by its ID.
-  * The RLS policy prevents a user from accessing content belonging to another user.
+  * The layout component renders correctly.
+  * The logout button successfully logs the user out and redirects them to the login page.
+
+-----
+
+**Ticket Name:** Build Writing Style Profile UI 🖋️
+\<br\> **Ticket Number:** TICKET-306
+\<br\> **Description:** Create the UI for users to upload documents and trigger the `WritingStyleProfile` generation process.
+\<br\> **Requirements/Other docs:**
+
+  * **Component**: A `StyleProfileGenerator` page.
+  * **Functionality**: A drag-and-drop or file-upload interface that sends the document to the `TICKET-201` module for analysis.
+    \<br\> **Acceptance Criteria:**
+  * A user can successfully upload documents.
+  * The UI provides clear feedback during the upload and analysis process.
+
+-----
+
+**Ticket Name:** Build Memory Bank Management UI 🧠
+\<br\> **Ticket Number:** TICKET-307
+\<br\> **Description:** Create the UI for the user's personal memory bank. This page will be a series of structured forms that allow the user to input and edit their personal and professional data.
+\<br\> **Requirements/Other docs:**
+
+  * **Component**: A `MemoryBankEditor` page.
+  * **Functionality**: The form should pre-populate with the existing data fetched from `TICKET-113` and save the updated data via `TICKET-114`.
+    \<br\> **Acceptance Criteria:**
+  * The user can view and edit their memory bank data.
+
+-----
+
+**Ticket Name:** Build Template & Onboarding UI 📝
+\<br\> **Ticket Number:** TICKET-308
+\<br\> **Description:** This ticket covers the creation of the UI for users to upload or paste a cover letter and designate specific sections as dynamic tokens.
+\<br\> **Requirements/Other docs:**
+
+  * **Component**: A `TemplateEditor` page with a text area and a button to "add token."
+  * **Functionality**: The UI must allow users to upload or paste a cover letter and designate placeholders, connecting to the `TICKET-109` and `TICKET-111` endpoints.
+    \<br\> **Acceptance Criteria:**
+  * The user can create and save a new template with dynamic placeholder tokens.
+
+-----
+
+**Ticket Name:** Build Document Generation UI ✨
+\<br\> **Ticket Number:** TICKET-309
+\<br\> **Description:** This ticket focuses on creating the central workspace where the user can generate a document, view multiple options for each placeholder, and see the source data.
+\<br\> **Requirements/Other docs:**
+
+  * **Component**: A `DocumentGenerator` page.
+  * **Functionality**: It will include a dropdown to select a template, an input for the company URL, and a "Generate Document" button that calls the `TICKET-209` endpoint.
+    \<br\> **Acceptance Criteria:**
+  * The user can successfully trigger document generation.
+
+-----
+
+**Ticket Name:** Implement Interactive Placeholder UI 🚀
+\<br\> **Ticket Number:** TICKET-310
+\<br\> **Description:** Create the interactive UI for the generated document. Each placeholder will be a clickable element that, when clicked, reveals a popup with the multiple generated options.
+\<br\> **Requirements/Other docs:**
+
+  * **Component**: An `InteractivePlaceholder` component.
+  * **Functionality**: Clicking a placeholder reveals a popup with the 3-5 generated options returned from `TICKET-209`.
+    \<br\> **Acceptance Criteria:**
+  * The user can click on a placeholder and see all generated options.
+
+-----
+
+**Ticket Name:** Implement Feedback & Source Attribution UI 🌐
+\<br\> **Ticket Number:** TICKET-311
+\<br\> **Description:** Implement the UI for providing feedback on generated lines and viewing source attribution.
+\<br\> **Requirements/Other docs:**
+
+  * **Component**: An enhanced `InteractivePlaceholder` popup.
+  * **Functionality**: The popup will include buttons to "Approve" or "Decline" each option, which calls the `TICKET-208` endpoint. It will also display the source `URL` and a quote from that page, as returned from `TICKET-209`.
+    \<br\> **Acceptance Criteria:**
+  * The user can approve or decline a generated line.
+  * The UI displays the source data for each generated line.
+
+-----
+
+**Ticket Name:** Build Ad-hoc Questions UI 📝
+\<br\> **Ticket Number:** TICKET-312
+\<br\> **Description:** Create the user interface for the ad-hoc questions workflow. This UI will allow users to paste in a question, provide a company URL, and view the AI-generated responses.
+\<br\> **Requirements/Other docs:**
+
+  * **Component**: An `ApplicationQuestionsPanel`.
+  * **Functionality**: An input field for the question and a button to trigger the AI generation via `TICKET-210`.
+    \<br\> **Acceptance Criteria:**
+  * The user can paste in a question and receive an AI-generated answer.
+
+-----
+
+**Ticket Name:** Implement Save Answer Functionality 💾
+\<br\> **Ticket Number:** TICKET-313
+\<br\> **Description:** Add the functionality to save an approved answer to the vector database from the Ad-hoc Questions UI.
+\<br\> **Requirements/Other docs:**
+
+  * **Functionality**: A "Save Answer" button that calls the `TICKET-208` endpoint with an `approved` status.
+    \<br\> **Acceptance Criteria:**
+  * The user can approve an ad-hoc answer, which saves it to the vector database.
+
+-----
+
+**Ticket Name:** Implement Word Document Download 📥
+\<br\> **Ticket Number:** TICKET-314
+\<br\> **Description:** This ticket is for implementing the functionality to allow users to download their generated cover letters as a Word document.
+\<br\> **Requirements/Other docs:**
+
+  * **Functionality**: Add a "Download as Word" button to the `DocumentGenerator` UI.
+  * **Logic**: The backend should be able to generate and serve a `.docx` file from the final document string.
+    \<br\> **Acceptance Criteria:**
+  * The user can download the generated document as a clean, formatted `.docx` file.
+
+-----
+
+**Ticket Name:** Implement PDF Document Download 📥
+\<br\> **Ticket Number:** TICKET-315
+\<br\> **Description:** This ticket is for implementing the functionality to allow users to download their generated cover letters as a PDF.
+\<br\> **Requirements/Other docs:**
+
+  * **Functionality**: Add a "Download as PDF" button to the `DocumentGenerator` UI.
+  * **Logic**: The backend should be able to generate and serve a `.pdf` file that preserves the formatting.
+    \<br\> **Acceptance Criteria:**
+  * The user can download the document as a `.pdf` file that preserves the formatting.
+
+-----
+
+**Ticket Name:** Containerize Frontend and Backend with Docker Compose 🐳
+\<br\> **Ticket Number:** TICKET-316
+\<br\> **Description:** This ticket involves packaging the entire application—the frontend and the backend—into a cohesive unit using **Docker Compose** for local development.
+\<br\> **Requirements/Other docs:**
+
+  * **Dockerfiles**: Create a `Dockerfile` for both the backend and frontend.
+  * **Docker Compose File**: Create a `docker-compose.yml` file to orchestrate the services, including connecting the backend to Supabase.
+    \<br\> **Acceptance Criteria:**
+  * The entire application can be started with a single `docker-compose up` command for local development.
+  * The frontend can communicate with the backend.

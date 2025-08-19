@@ -1,193 +1,212 @@
-Here are the tickets for Sprint 1, designed to follow the low-level, dependency-driven style you outlined. They focus on establishing the foundational infrastructure and core user services for "AI Me Apply," with a specific emphasis on a test suite for every function and endpoint.
+### **Sprint 1: Foundational Infrastructure & Core Data Management**
 
-### **Sprint 1 Overview: Foundational Infrastructure & Core User Service**
-
-This sprint's purpose is to establish the project's technical bedrock. We will build the essential, non-UI backend services for user identity and profile management. This includes setting up the project structure, defining the core database schema, and implementing API endpoints for user registration and authentication using Supabase. By the end of this sprint, we will have a secure, running backend service where users can register, log in to receive a valid JWT, and save their initial profile data.
+This sprint establishes the technical foundation for your application. We will set up the core database tables and API endpoints in Supabase to handle your personal data, templates, and application history.
 
 -----
 
-### **Major Functionality Delivered**
-
-  * **Project Initialization**: A structured Node.js/Express monorepo with configured logging and Supabase client setup.
-  * **Core Database Schema**: Initial PostgreSQL tables for `users`, `writing_style_profiles`, and `memory_banks` will be created with Row-Level Security (RLS) policies.
-  * **User Registration API**: An endpoint allowing new users to register, which creates an entry in Supabase Auth and populates their initial profile tables.
-  * **User Authentication API**: An endpoint for users to log in and receive a custom, time-limited JWT.
-  * **User Profile Management**: A protected endpoint for authenticated users to save their initial `MemoryBanks` data and retrieve their own basic profile.
-
------
-
-### **Sprint Tickets**
-
-The tickets are ordered to resolve dependencies, starting with project setup and moving through to the implementation of the user-facing APIs.
-
------
-
-**Ticket Name:** Initialise Node.js Project Structure & Supabase Client 🛠️
-\<br\> **Ticket Number:** TICKET-1001
+**Ticket Name:** Initialise Node.js Project & Supabase Client 🛠️
+\<br\> **Ticket Number:** TICKET-101
 \<br\> **Description:** This ticket covers the initial setup of the Node.js project. It involves creating the monorepo structure, installing foundational libraries like Express.js, and configuring the Supabase JavaScript client for connection.
 \<br\> **Requirements/Other docs:**
 
-  * **Project Structure**: A modular monorepo structure should be established to house different services.
-    ```
-    /project-root
-    ├── /services
-    │   ├── /user-authentication-service
-    │   └── ... (other future services)
-    ├── /packages
-    │   └── /common (shared utilities, types)
-    └── package.json
-    ```
+  * **Project Structure**: A modular monorepo structure should be established.
   * **Dependencies**: Install `express`, `dotenv`, and the `@supabase/supabase-js` client library.
   * **Supabase Config**: Configure the Supabase client with the URL and API key from a `.env` file.
-    \<br\> **Test Suite Design:**
-  * A **unit test** that verifies the Supabase client is successfully initialized and has a valid URL and key.
     \<br\> **Acceptance Criteria:**
   * The Node.js application can be started without errors.
-  * The project directory structure is in place.
   * The Supabase client is configured and can connect to the database.
 
 -----
 
-**Ticket Name:** Define and Implement Core Supabase Schema 🧑‍💻
-\<br\> **Ticket Number:** TICKET-1002
-\<br\> **Description:** This ticket involves defining and implementing the initial database schema in the Supabase PostgreSQL instance. It includes creating tables for user data and configuring Row-Level Security (RLS) policies.
+**Ticket Name:** Implement Supabase `Templates` Table Schema 📝
+\<br\> **Ticket Number:** TICKET-102
+\<br\> **Description:** Create the `Templates` table in Supabase. This table will store all the information related to your personal cover letter templates, including the content and placeholders.
 \<br\> **Requirements/Other docs:**
 
-  * **Tables**: The schema must create the `users`, `writing_style_profiles`, and `memory_banks` tables.
-  * **Field Definitions**:
-      * **`users`**: `id` (`UUID`, PK from Supabase Auth), `email` (`VARCHAR`, Unique), `name` (`VARCHAR`), `created_at` (`TIMESTAMPZ`).
-      * **`writing_style_profiles`**: `user_id` (`UUID`, PK/FK to `users.id`), `profile_data` (`JSONB`), `created_at` (`TIMESTAMPZ`).
-      * **`memory_banks`**: `user_id` (`UUID`, PK/FK to `users.id`), `data` (`JSONB`), `created_at` (`TIMESTAMPZ`).
-  * **Row-Level Security (RLS)**: Enable RLS on all three tables and create a policy that only allows a user to `SELECT`, `INSERT`, `UPDATE`, and `DELETE` rows where `user_id` is equal to their own authenticated user ID.
-    \<br\> **Test Suite Design:**
-  * A **database migration script** that can be run to create the tables.
-  * A **verification script** to check for the existence of all tables and the correct RLS policies.
+  * **Table**: The schema must create the `Templates` table.
+  * **Field Definitions**: `user_id` (FK), `content` (`TEXT`), `placeholders` (`JSONB`).
+  * **Row-Level Security (RLS)**: Enable RLS and create a policy that allows a user to access only their own templates.
     \<br\> **Acceptance Criteria:**
-  * All three tables exist with the correct schemas.
-  * The RLS policies are enabled and correctly prevent unauthorized access.
+  * The `Templates` table exists with the specified schema.
+  * RLS is enabled and correctly restricts access.
 
 -----
 
-**Ticket Name:** Implement `createUserInSupabase` Function ➕
-\<br\> **Ticket Number:** TICKET-1003
-\<br\> **Description:** This ticket covers the implementation of a reusable function that communicates with the Supabase Auth API to create a new user. This is a low-level function that will be used by the registration endpoint.
+**Ticket Name:** Implement Supabase `MemoryBanks` Table Schema 🧠
+\<br\> **Ticket Number:** TICKET-103
+\<br\> **Description:** Create the `MemoryBanks` table in Supabase. This table will store your personal history and achievements.
 \<br\> **Requirements/Other docs:**
 
-  * **Function Signature**: `createUserInSupabase(email, password)`
-  * **Logic**: Use the Supabase client to call `supabase.auth.signUp()`.
-  * **Error Handling**: The function must catch and re-throw specific errors, such as a "user with this email already exists" error.
-    \<br\> **Test Suite Design:**
-  * A **unit test** for the function with a **new email** that asserts a user is created in Supabase.
-  * A **unit test** for the function with an **existing email** that asserts a specific error is thrown.
+  * **Table**: The schema must create the `MemoryBanks` table.
+  * **Field Definitions**: `user_id` (FK), `data` (`JSONB`).
+  * **Row-Level Security (RLS)**: Enable RLS and create a policy that allows a user to access only their own `MemoryBanks` data.
     \<br\> **Acceptance Criteria:**
-  * The function successfully creates a new user in Supabase Auth.
-  * The function correctly handles a duplicate email by throwing a catchable error.
+  * The `MemoryBanks` table exists with the specified schema.
+  * RLS is enabled and correctly restricts access.
 
 -----
 
-**Ticket Name:** Implement `signInWithSupabase` Function 🔑
-\<br\> **Ticket Number:** TICKET-1004
-\<br\> **Description:** This ticket covers the implementation of a low-level function that authenticates a user with Supabase. It takes a user's credentials and returns a session object with a JWT.
+**Ticket Name:** Implement Supabase `WritingStyleProfiles` Table Schema 🖋️
+\<br\> **Ticket Number:** TICKET-104
+\<br\> **Description:** Create the `WritingStyleProfiles` table in Supabase. This table will store your AI-generated writing style profile.
 \<br\> **Requirements/Other docs:**
 
-  * **Function Signature**: `signInWithSupabase(email, password)`
-  * **Logic**: Use the Supabase client to call `supabase.auth.signInWithPassword()`.
-  * **Error Handling**: The function must handle success and error responses, such as invalid credentials.
-    \<br\> **Test Suite Design:**
-  * A **unit test** for the function with **valid credentials** that asserts a session object is returned.
-  * A **unit test** for the function with **invalid credentials** that asserts a specific error is thrown.
+  * **Table**: The schema must create the `WritingStyleProfiles` table.
+  * **Field Definitions**: `user_id` (FK), `profile_data` (`JSONB`).
+  * **Row-Level Security (RLS)**: Enable RLS and create a policy that allows a user to access only their own `WritingStyleProfiles` data.
     \<br\> **Acceptance Criteria:**
-  * The function successfully authenticates a user and returns a session object.
-  * The function correctly handles invalid credentials by throwing a catchable error.
+  * The `WritingStyleProfiles` table exists with the specified schema.
+  * RLS is enabled and correctly restricts access.
 
 -----
 
-**Ticket Name:** Implement User Registration Endpoint ✍️
-\<br\> **Ticket Number:** TICKET-1005
-\<br\> **Description:** Create the public-facing API endpoint for new user registration. This endpoint will orchestrate the creation of a user in Supabase Auth and then populate the corresponding records in the `users` and `memory_banks` tables.
+**Ticket Name:** Implement Supabase `ApplicationAnswers` Table Schema & `pgvector` 📝
+\<br\> **Ticket Number:** TICKET-105
+\<br\> **Description:** Create the `ApplicationAnswers` table in Supabase. This table will store your past application questions and answers, and it will be configured as a vector database.
 \<br\> **Requirements/Other docs:**
 
-  * **Endpoint**: `POST /api/v1/auth/register`
-  * **Request Body**:
-    ```json
-    {
-      "email": "string",
-      "password": "string"
-    }
-    ```
-  * **Success Response**: `201 Created` with a success message.
-  * **Logic**:
-    1.  Call the `createUserInSupabase` function.
-    2.  If successful, use the returned user ID (`id`) to create a new record in the `users` and `memory_banks` tables.
-        \<br\> **Test Suite Design:**
-  * An **integration test** for a **successful registration** that asserts a `201` status and verifies the user exists in Supabase Auth and the `users` and `memory_banks` tables.
-  * An **integration test** for a **duplicate email** that asserts a `409 Conflict` status.
-  * An **integration test** for **invalid input** (e.g., missing email) that asserts a `400 Bad Request` status.
+  * **Table**: The schema must create the `ApplicationAnswers` table.
+  * **Field Definitions**: `user_id` (FK), `question` (`TEXT`), `answer` (`TEXT`), `vector_embedding` (`vector`).
+  * **`pgvector` Extension**: Enable the `pgvector` extension in the Supabase database.
+  * **Row-Level Security (RLS)**: Enable RLS and create a policy that allows a user to access only their own `ApplicationAnswers`.
     \<br\> **Acceptance Criteria:**
-  * A successful call creates a user in Supabase and the correct tables in the app database.
-  * An attempt to register with a duplicate email returns a `409` status.
+  * The `ApplicationAnswers` table exists with the specified schema.
+  * The `pgvector` extension is enabled.
+  * RLS is enabled and correctly restricts access.
 
 -----
 
-**Ticket Name:** Implement User Login Endpoint ➡️
-\<br\> **Ticket Number:** TICKET-1006
-\<br\> **Description:** Create the public-facing API endpoint for user login. This endpoint will use the `signInWithSupabase` function and return a JWT that the client can use for future requests.
+**Ticket Name:** Implement User Registration Endpoint 🔑
+\<br\> **Ticket Number:** TICKET-106
+\<br\> **Description:** Create the API endpoint for user registration using Supabase Auth.
 \<br\> **Requirements/Other docs:**
 
-  * **Endpoint**: `POST /api/v1/auth/login`
-  * **Request Body**:
-    ```json
-    {
-      "email": "string",
-      "password": "string"
-    }
-    ```
-  * **Success Response**: `200 OK` with a JSON body containing the JWT (`{ "token": "..." }`).
-  * **Logic**:
-    1.  Call the `signInWithSupabase` function.
-    2.  If successful, extract the JWT from the session object and return it.
-        \<br\> **Test Suite Design:**
-  * An **integration test** for a **successful login** that asserts a `200` status and a valid JWT is returned.
-  * An **integration test** for **invalid credentials** that asserts a `401 Unauthorized` status.
+  * **Endpoint**: `POST /api/v1/auth/register`.
+  * **Logic**: Use the `supabase.auth.signUp()` function to create a new user.
     \<br\> **Acceptance Criteria:**
-  * A successful login returns a `200 OK` with a valid JWT.
-  * A login attempt with invalid credentials returns a `401 Unauthorized` error.
+  * A new user can register in the Supabase Auth system.
 
 -----
 
-**Ticket Name:** Implement User Profile Retrieval Endpoint ℹ️
-\<br\> **Ticket Number:** TICKET-1007
-\<br\> **Description:** Create the protected endpoint that allows a logged-in user to retrieve their own basic profile information. This endpoint will serve as the first test of the RLS policies and JWT validation.
+**Ticket Name:** Implement Profile Initialisation Logic on Registration 🧑‍💻
+\<br\> **Ticket Number:** TICKET-107
+\<br\> **Description:** Implement a server-side function that listens for new user registrations and automatically creates initial records in the `MemoryBanks`, `Templates`, and `WritingStyleProfiles` tables.
 \<br\> **Requirements/Other docs:**
 
-  * **Endpoint**: `GET /api/v1/users/me`
-  * **Protection**: The endpoint must require a valid JWT in the `Authorization` header.
-  * **Success Response**: `200 OK` with a JSON body containing the user's `name` and other basic data from the `users` table.
-    \<br\> **Test Suite Design:**
-  * An **integration test** for a **valid JWT** that asserts a `200` status and the correct user data is returned.
-  * An **integration test** for an **invalid or missing JWT** that asserts a `401 Unauthorized` status.
-  * A **cross-user test** that attempts to retrieve another user's data (to check RLS) and asserts a `401` or `404` status.
+  * **Trigger**: A Supabase trigger or webhook that fires on new user creation.
+  * **Logic**: The function will create a new, empty record in each of the specified tables with the `user_id` of the newly created user.
     \<br\> **Acceptance Criteria:**
-  * An authenticated request to the endpoint returns the correct user data.
-  * An unauthenticated request fails with a `401` error.
-  * A request with a valid token from User A cannot retrieve data belonging to User B.
+  * When a new user registers, corresponding empty records are automatically created in all relevant tables.
 
 -----
 
-**Ticket Name:** Implement Initial Profile Onboarding Endpoint 📝
-\<br\> **Ticket Number:** TICKET-1008
-\<br\> **Description:** Create the protected endpoint that allows a newly registered user to save their initial `MemoryBanks` data during the onboarding process. This will be a simple, one-time data save.
+**Ticket Name:** Implement User Login Endpoint 🔑
+\<br\> **Ticket Number:** TICKET-108
+\<br\> **Description:** Create the API endpoint for user login. This endpoint will use Supabase Auth to verify credentials and return a JWT for protected routes.
 \<br\> **Requirements/Other docs:**
 
-  * **Endpoint**: `POST /api/v1/profile/onboard`
-  * **Protection**: The endpoint must require a valid JWT.
-  * **Request Body**: A JSON object containing the initial profile data (e.g., `{"work_experience": "...", "skills": "..."}`).
-  * **Success Response**: `200 OK` with a success message.
-  * **Logic**: The endpoint will update the `data` column of the `memory_banks` table for the authenticated user.
-    \<br\> **Test Suite Design:**
-  * An **integration test** for a **successful data save** that asserts a `200` status and verifies the data was correctly stored in the `memory_banks` table via a direct database query.
-  * An **integration test** for a **missing JWT** that asserts a `401 Unauthorized` status.
+  * **Endpoint**: `POST /api/v1/auth/login`.
+  * **Logic**: Use the `supabase.auth.signInWithPassword()` function and return the JWT from the session object.
     \<br\> **Acceptance Criteria:**
-  * An authenticated user can successfully save their initial profile data.
-  * The saved data is correctly persisted in the `memory_banks` table.
-  * The endpoint is protected and rejects unauthorized requests.
+  * An existing user can log in and receive a JWT.
+  * The endpoint returns the correct error for invalid credentials.
+
+-----
+
+**Ticket Name:** Implement `POST /api/v1/templates` Endpoint ✍️
+\<br\> **Ticket Number:** TICKET-109
+\<br\> **Description:** Create the secure API endpoint for a user to create a new template. This is the "Create" part of the CRUD functionality.
+\<br\> **Requirements/Other docs:**
+
+  * **Endpoint**: `POST /api/v1/templates`.
+  * **Security**: Must be protected by a valid JWT, and the `user_id` for the new template must be set to the ID of the authenticated user.
+    \<br\> **Acceptance Criteria:**
+  * An authenticated user can successfully create a new template.
+  * The endpoint returns a `201 Created` status with the newly created template object.
+
+-----
+
+**Ticket Name:** Implement `GET /api/v1/templates` Endpoint 🖼️
+\<br\> **Ticket Number:** TICKET-110
+\<br\> **Description:** Implement the "Read" API endpoint for templates, allowing a user to retrieve a list of all their templates.
+\<br\> **Requirements/Other docs:**
+
+  * **Endpoint**: `GET /api/v1/templates`.
+  * **Security**: Must be protected by a valid JWT.
+  * **Logic**: The endpoint will return a list of all templates associated with the authenticated user's ID.
+    \<br\> **Acceptance Criteria:**
+  * The endpoint returns a list of templates belonging only to the authenticated user.
+
+-----
+
+**Ticket Name:** Implement `PUT /api/v1/templates/{id}` Endpoint 📝
+\<br\> **Ticket Number:** TICKET-111
+\<br\> **Description:** Create the API endpoint for a user to update an existing template. This is the "Update" part of the CRUD functionality.
+\<br\> **Requirements/Other docs:**
+
+  * **Endpoint**: `PUT /api/v1/templates/{id}`.
+  * **Security**: Must be protected by a valid JWT, and the user can only update a template they own.
+    \<br\> **Acceptance Criteria:**
+  * An authenticated user can successfully update a template they own.
+  * The endpoint returns a `200 OK` status with the updated template object.
+
+-----
+
+**Ticket Name:** Implement `DELETE /api/v1/templates/{id}` Endpoint 🗑️
+\<br\> **Ticket Number:** TICKET-112
+\<br\> **Description:** Create the API endpoint for a user to delete one of their templates.
+\<br\> **Requirements/Other docs:**
+
+  * **Endpoint**: `DELETE /api/v1/templates/{id}`.
+  * **Security**: Must be protected by a valid JWT, and the user can only delete a template they own.
+    \<br\> **Acceptance Criteria:**
+  * An authenticated user can successfully delete a template they own.
+  * The endpoint returns a `204 No Content` status.
+
+-----
+
+**Ticket Name:** Implement `GET /api/v1/memory-bank` Endpoint 🧠
+\<br\> **Ticket Number:** TICKET-113
+\<br\> **Description:** Create the API endpoint to retrieve the user's `MemoryBanks` data.
+\<br\> **Requirements/Other docs:**
+
+  * **Endpoint**: `GET /api/v1/memory-bank`.
+  * **Security**: Must be protected by a valid JWT.
+    \<br\> **Acceptance Criteria:**
+  * The endpoint returns the `MemoryBanks` data for the authenticated user.
+
+-----
+
+**Ticket Name:** Implement `PUT /api/v1/memory-bank` Endpoint ✍️
+\<br\> **Ticket Number:** TICKET-114
+\<br\> **Description:** Create the API endpoint to update the user's `MemoryBanks` data.
+\<br\> **Requirements/Other docs:**
+
+  * **Endpoint**: `PUT /api/v1/memory-bank`.
+  * **Security**: Must be protected by a valid JWT.
+    \<br\> **Acceptance Criteria:**
+  * An authenticated user can successfully update their `MemoryBanks` data.
+
+-----
+
+**Ticket Name:** Implement `GET /api/v1/writing-style-profile` Endpoint 🖋️
+\<br\> **Ticket Number:** TICKET-115
+\<br\> **Description:** Create the API endpoint to retrieve the user's `WritingStyleProfile`.
+\<br\> **Requirements/Other docs:**
+
+  * **Endpoint**: `GET /api/v1/writing-style-profile`.
+  * **Security**: Must be protected by a valid JWT.
+    \<br\> **Acceptance Criteria:**
+  * The endpoint returns the `WritingStyleProfile` for the authenticated user.
+
+-----
+
+**Ticket Name:** Implement `PUT /api/v1/writing-style-profile` Endpoint ✍️
+\<br\> **Ticket Number:** TICKET-116
+\<br\> **Description:** Create the API endpoint to update the user's `WritingStyleProfile`. This will be called by the `TICKET-201` module.
+\<br\> **Requirements/Other docs:**
+
+  * **Endpoint**: `PUT /api/v1/writing-style-profile`.
+  * **Security**: Must be protected by a valid JWT.
+    \<br\> **Acceptance Criteria:**
+  * An authenticated user can successfully update their `WritingStyleProfile`.

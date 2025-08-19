@@ -1,40 +1,47 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "$0")"/.. && pwd)"
-FAIL=0
+check_file() { [[ -f "$1" ]] || { echo "Missing file: $1"; exit 1; }; }
+check_dir() { [[ -d "$1" ]] || { echo "Missing dir: $1"; exit 1; }; }
 
-check() {
-  local path="$1"
-  if [ -e "$ROOT_DIR/$path" ]; then
-    echo "[OK] $path"
-  else
-    echo "[MISSING] $path" >&2
-    FAIL=1
-  fi
-}
+# Tickets and prompts
+check_file "Tickets/Sprint 2/TICKET-201.md"
+check_file "Tickets/Sprint 2/TICKET-202.md"
+check_file "Tickets/Sprint 2/TICKET-203.md"
+check_file "Tickets/Sprint 2/TICKET-204.md"
+check_file "Tickets/Sprint 2/TICKET-205.md"
+check_file "Tickets/Sprint 2/TICKET-206.md"
+check_file "Tickets/Sprint 2/TICKET-207.md"
+check_file "Tickets/Sprint 2/TICKET-208.md"
+check_file "Build_documentation/Cursor Ticket Prompts/Sprint 2/TICKET-201 Prompt.md"
+check_file "Build_documentation/Cursor Ticket Prompts/Sprint 2/TICKET-202 Prompt.md"
+check_file "Build_documentation/Cursor Ticket Prompts/Sprint 2/TICKET-203 Prompt.md"
+check_file "Build_documentation/Cursor Ticket Prompts/Sprint 2/TICKET-204 Prompt.md"
+check_file "Build_documentation/Cursor Ticket Prompts/Sprint 2/TICKET-205 Prompt.md"
+check_file "Build_documentation/Cursor Ticket Prompts/Sprint 2/TICKET-206 Prompt.md"
+check_file "Build_documentation/Cursor Ticket Prompts/Sprint 2/TICKET-207 Prompt.md"
+check_file "Build_documentation/Cursor Ticket Prompts/Sprint 2/TICKET-208 Prompt.md"
 
-# Tickets
-for n in {1001..1008}; do
-  check "Tickets/Sprint 1/TICKET-$n.md"
-done
+# Packages
+check_dir "packages/writing-style-analyzer"
+check_file "packages/writing-style-analyzer/src/analyzeWritingStyle.js"
+check_dir "packages/web-scraping-module"
+check_file "packages/web-scraping-module/src/WebScrapingModule.js"
+check_dir "packages/ai-humanization-module"
+check_file "packages/ai-humanization-module/src/AIHumanizationModule.js"
+check_dir "packages/embedding-generator"
+check_file "packages/embedding-generator/src/generateEmbedding.js"
+check_dir "packages/vector-search"
+check_file "packages/vector-search/src/findSimilarLines.js"
+check_dir "packages/ai-line-generator"
+check_file "packages/ai-line-generator/src/generateLines.js"
+check_dir "packages/source-attribution"
+check_file "packages/source-attribution/src/SourceAttributionModule.js"
+check_dir "packages/watermark-removal"
+check_file "packages/watermark-removal/src/WatermarkRemovalModule.js"
 
-# Build docs
-check "Build_documentation/API-Reference.md"
-check "Build_documentation/Schemas.md"
-check "Build_documentation/Sprint-Progress.md"
-check "Build_documentation/Troubleshooting.md"
-check "Build_documentation/Project Structure Documentation.md"
-check "Build_documentation/Best-Practices.md"
+# Migrations
+check_file "database/migrations/011_vector_search_fn.sql"
+check_file "database/migrations/012_source_attributions.sql"
 
-# Database
-check "database/migrations"
-check "database/scripts/refresh_database.sh"
-check "database/scripts/verify_schema.sql"
-
-if [ "$FAIL" -eq 0 ]; then
-  echo "✅ Cross checks passed"
-else
-  echo "❌ Cross checks failed" >&2
-  exit 1
-fi 
+echo "Cross checks passed." 

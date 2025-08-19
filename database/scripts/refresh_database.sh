@@ -1,32 +1,36 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Refresh the database schema for the project.
-# This script assumes the presence of a migration runner (to be implemented)
-# and uses environment variables for DB connection.
+# Load .env from repo root if present
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+if [[ -f "$ROOT_DIR/.env" ]]; then
+	set -a
+	. "$ROOT_DIR/.env"
+	set +a
+fi
 
-ROOT_DIR="$(cd "$(dirname "$0")"/../.. && pwd)"
-MIGRATIONS_DIR="$ROOT_DIR/database/migrations"
-VERIFY_SQL="$ROOT_DIR/database/scripts/verify_schema.sql"
+# Allow SUPABASE_DB_URL fallback
+: "${DATABASE_URL:=${SUPABASE_DB_URL:-}}"
 
-echo "==> Refreshing database (drop + recreate public schema)"
-psql "${DATABASE_URL:-}" -v ON_ERROR_STOP=1 <<'SQL'
-BEGIN;
+if [[ -z "${DATABASE_URL:-}" ]]; then
+	echo "DATABASE_URL is required. Set it in your environment or in .env at the repo root." >&2
+	exit 1
+fi
+
+shopt -s nullglob
+
+# Recreate public schema
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
 DROP SCHEMA IF EXISTS public CASCADE;
 CREATE SCHEMA public;
-GRANT ALL ON SCHEMA public TO public;
-COMMIT;
+GRANT USAGE ON SCHEMA public TO public;
 SQL
 
-echo "==> Applying migrations from: $MIGRATIONS_DIR"
-# Placeholder: apply SQL files in order if present
-for file in "$MIGRATIONS_DIR"/*.sql; do
-  [ -e "$file" ] || continue
-  echo "   -> Applying $file"
-  psql "${DATABASE_URL:-}" -v ON_ERROR_STOP=1 -f "$file"
+# Apply migrations in order
+for f in $(ls -1 database/migrations/*.sql | sort); do
+	echo "Applying $f"
+	psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$f"
 done
 
-echo "==> Verifying schema"
-psql "${DATABASE_URL:-}" -v ON_ERROR_STOP=1 -f "$VERIFY_SQL"
-
-echo "✅ Database refresh complete" 
+echo "Schema refresh complete" 

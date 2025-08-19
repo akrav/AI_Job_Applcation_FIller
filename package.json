@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "workspaces": [
     "services/*",
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "engines": {
     "node": ">=20.0.0",
@@ -14,7 +15,9 @@
     "install-all": "npm install",
     "dev": "npm --workspace services/user-authentication-service run dev",
     "start": "npm --workspace services/user-authentication-service run start",
-    "test": "npm --workspace services/user-authentication-service run test",
+    "frontend:dev": "npm --workspace apps/frontend run dev",
+    "frontend:build": "npm --workspace apps/frontend run build",
+    "test": "npm --workspace services/user-authentication-service run test && npm --workspace packages/writing-style-analyzer run test && npm --workspace packages/web-scraping-module run test && npm --workspace packages/ai-humanization-module run test && npm --workspace packages/embedding-generator run test && npm --workspace packages/vector-search run test && npm --workspace packages/ai-line-generator run test && npm --workspace packages/source-attribution run test && npm --workspace packages/watermark-removal run test",
     "test:watch": "npm --workspace services/user-authentication-service run test:watch",
     "node:version": "node -v && npm -v"
   },

@@ -31,6 +31,58 @@ Core tables to support authentication-linked user data and onboarding data stora
 - `data` JSONB
 - `created_at` TIMESTAMPTZ
 
+### public.style_profiles
+- `id` UUID PK
+- `user_id` UUID FK → `auth.users.id`
+- `name` VARCHAR
+- `status` VARCHAR
+- `active_version_id` UUID (nullable)
+- `created_at` TIMESTAMPTZ
+- `updated_at` TIMESTAMPTZ
+
+### public.style_profile_versions
+- `id` UUID PK
+- `style_profile_id` UUID FK → `public.style_profiles.id`
+- `version` INTEGER (unique per `style_profile_id`)
+- `kernel_json` JSONB
+- `thresholds_json` JSONB
+- `created_at` TIMESTAMPTZ
+
+### public.style_documents
+- `id` UUID PK
+- `style_profile_id` UUID FK → `public.style_profiles.id`
+- `file_name` TEXT
+- `mime_type` TEXT
+- `bytes_url` TEXT
+- `text_chars` TEXT
+- `created_at` TIMESTAMPTZ
+
+### public.style_exemplars
+- `id` UUID PK
+- `style_profile_version_id` UUID FK → `public.style_profile_versions.id`
+- `text` TEXT
+- `word_count` INTEGER
+- `source_document_id` UUID FK → `public.style_documents.id` (nullable)
+- `created_at` TIMESTAMPTZ
+
+### public.style_lexicon
+- `id` UUID PK
+- `style_profile_version_id` UUID FK → `public.style_profile_versions.id`
+- `preferred_terms` JSONB
+- `banned_terms` JSONB
+- `synonyms_map` JSONB
+- `created_at` TIMESTAMPTZ
+
+### public.style_runs
+- `id` UUID PK
+- `style_profile_version_id` UUID FK → `public.style_profile_versions.id`
+- `task` TEXT
+- `input_json` JSONB
+- `output_text` TEXT
+- `score` NUMERIC(4,3)
+- `passed` BOOLEAN
+- `created_at` TIMESTAMPTZ
+
 ---
 
 ## RLS Policies

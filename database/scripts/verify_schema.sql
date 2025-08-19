@@ -1,21 +1,17 @@
--- Verify core tables and RLS policies for Sprint 1
-\echo '==> Verifying required tables exist'
-SELECT 'users' AS table, to_regclass('public.users') IS NOT NULL AS exists;
-SELECT 'writing_style_profiles' AS table, to_regclass('public.writing_style_profiles') IS NOT NULL AS exists;
-SELECT 'memory_banks' AS table, to_regclass('public.memory_banks') IS NOT NULL AS exists;
+-- verify existence of key tables
+select to_regclass('public.templates') as templates_table;
+select to_regclass('public.style_profiles') as style_profiles_table;
+select to_regclass('public.style_profile_versions') as style_profile_versions_table;
+select to_regclass('public.style_documents') as style_documents_table;
+select to_regclass('public.style_exemplars') as style_exemplars_table;
+select to_regclass('public.style_lexicon') as style_lexicon_table;
+select to_regclass('public.style_runs') as style_runs_table;
 
-\echo '==> Verifying RLS enabled (if tables exist)'
-DO $$
-BEGIN
-  IF to_regclass('public.users') IS NOT NULL THEN
-    PERFORM 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname='users' AND relrowsecurity = true;
-  END IF;
-  IF to_regclass('public.writing_style_profiles') IS NOT NULL THEN
-    PERFORM 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname='writing_style_profiles' AND relrowsecurity = true;
-  END IF;
-  IF to_regclass('public.memory_banks') IS NOT NULL THEN
-    PERFORM 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname='memory_banks' AND relrowsecurity = true;
-  END IF;
-END $$;
-
-\echo '✅ Verification completed' 
+-- verify RLS enabled on key tables
+select 'templates' as table_name, relrowsecurity from pg_class where relname = 'templates';
+select 'style_profiles' as table_name, relrowsecurity from pg_class where relname = 'style_profiles';
+select 'style_profile_versions' as table_name, relrowsecurity from pg_class where relname = 'style_profile_versions';
+select 'style_documents' as table_name, relrowsecurity from pg_class where relname = 'style_documents';
+select 'style_exemplars' as table_name, relrowsecurity from pg_class where relname = 'style_exemplars';
+select 'style_lexicon' as table_name, relrowsecurity from pg_class where relname = 'style_lexicon';
+select 'style_runs' as table_name, relrowsecurity from pg_class where relname = 'style_runs'; 

@@ -1,0 +1,1 @@
+DATABASE_URL="postgresql://postgres:qnG1pI8SUshHnnSW@db.cveuyuuvpcgoylusiulb.supabase.co:5432/postgres" ./database/scripts/refresh_database.sh
